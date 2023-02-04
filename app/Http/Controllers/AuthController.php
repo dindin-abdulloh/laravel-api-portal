@@ -43,4 +43,14 @@ class AuthController extends Controller
         return response()->noContent();
 
     }
+
+    public function me(Request $request)
+    {
+        // $request->user()->currenAccessToken()->delete();
+        // $request->user()->tokens()->delete();
+
+        // return response()->noContent();
+        return response()->json(Auth::user());
+
+    }
 }

@@ -2,10 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostReq;
 use App\Http\Resources\PostDetailResource;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class PostController extends Controller
 {
@@ -28,9 +31,14 @@ class PostController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
         //
+        $request['author'] = Auth::user()->id;
+        // $post = Post::create($request->validated());
+        // return new PostResource($post);
+        $post = Post::create($request->all());
+        return new PostResource($post->loadMissing('writer:id,username'));
     }
 
     /**
@@ -53,9 +61,13 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostReq $request, $id)
     {
-        //
+
+        $post = Post::find($id);
+        $post->update($request->validated());
+        return new PostDetailResource($post->loadMissing('writer:id,username'));
+
     }
 
     /**
