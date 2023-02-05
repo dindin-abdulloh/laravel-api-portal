@@ -9,6 +9,7 @@ use App\Http\Resources\PostResource;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 
 class PostController extends Controller
 {
@@ -22,7 +23,7 @@ class PostController extends Controller
         //
         $posts = Post::paginate(10);
 
-        return  PostResource::collection($posts);
+        return  PostResource::collection($posts->loadMissing(['writer:id,username', 'comments:id,post_id,user_id,comment_content']));
     }
 
     /**
@@ -34,6 +35,15 @@ class PostController extends Controller
     public function store(StorePostRequest $request)
     {
         //
+        $image = null;
+        if($request->file){
+            $fileName = $this->generateRandomString();
+            $extention = $request->file->extension();
+            $image = $fileName.'.'.$extention;
+
+            Storage::putFileAs('image', $request->file, $image);
+        }
+        $request['image'] = $image;
         $request['author'] = Auth::user()->id;
         // $post = Post::create($request->validated());
         // return new PostResource($post);
@@ -50,8 +60,8 @@ class PostController extends Controller
     public function show($id)
     {
         //
-        $post = Post::with('writer:id,email,username,firstname,lastname')->findOrFail($id);
-        return new PostDetailResource($post);
+        $post = Post::with('writer:id,username')->findOrFail($id);
+        return new PostDetailResource($post->loadMissing(['writer:id,username', 'comments:id,post_id,user_id,comment_content']));
     }
 
     /**
@@ -76,8 +86,20 @@ class PostController extends Controller
      * @param  \App\Models\Post  $post
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Post $post)
+    public function destroy($id)
     {
         //
+        Post::destroy($id);
+        return response()->json(['message' => 'Item deleted successfully.']);
+    }
+
+    function generateRandomString($length = 30) {
+        $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        $charactersLength = strlen($characters);
+        $randomString = '';
+        for ($i = 0; $i < $length; $i++) {
+            $randomString .= $characters[random_int(0, $charactersLength - 1)];
+        }
+        return $randomString;
     }
 }

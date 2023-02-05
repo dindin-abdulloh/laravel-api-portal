@@ -17,11 +17,22 @@ class PostResource extends JsonResource
         return [
             'id' => $this->id,
             'title' => $this->title,
+            'image' => $this->image,
             'news_content' => $this->news_content,
             'author' => $this->author,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'author' => $this->writer,
+            'author' => $this->whenLoaded('writer'),
+            'comment' => $this->whenLoaded('comments', function(){
+                return collect($this->comments)->each(function($com){
+                    $com->comentator;
+                    return $com;
+                });
+            }),
+
+            'comment_total' => $this->whenLoaded('comments', function(){
+                return $this->comments->count();
+            })
         ];
     }
 }
