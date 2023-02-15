@@ -35,4 +35,7 @@ class PostResource extends JsonResource
             })
         ];
     }
+
+    // make looping for in php?
+
 }
